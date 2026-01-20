@@ -1,0 +1,19 @@
+{
+  "name": "FastFileManage",
+  "version": "1.0.2",
+  "description": "快速文件管理工具，提供文件搜索、预览和操作功能",
+  "author": "开发者",
+  "logo": "logo.png",
+  "main": "index.html",
+  "preload": "preload.js",
+  "width": 800,
+  "height": 600,
+  "platform": ["win32", "darwin", "linux"],
+  "features": [
+    {
+      "code": "fastfilemanage",
+      "explain": "快速文件管理",
+      "cmds": ["文件管理", "file manage"]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快速文件管理</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top区域 - 搜索框 -->
+        <div class="top-region" id="topRegion">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索文件..." autocomplete="off">
+        </div>
+        
+        <!-- 路径显示区域 -->
+        <div class="path-region" id="pathRegion">
+            <span class="current-path" id="currentPath">C:/</span>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-region">
+            <!-- 左侧栏 - 盘符列表 -->
+            <div class="left-region" id="leftRegion" tabindex="0">
+                <div class="drive-list" id="driveList">
+                    <!-- 盘符列表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 右侧栏 - 文件列表 -->
+            <div class="right-region" id="rightRegion" tabindex="0">
+                <div class="file-list" id="fileList">
+                    <!-- 文件列表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="UI-Config.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

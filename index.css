@@ -1,0 +1,312 @@
+/* 快速文件管理插件 - 样式文件 */
+
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #2d2d2d; /* 深灰色背景 */
+    color: #ffffff; /* 白色文字 */
+    line-height: 1.6;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* 应用容器 */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ========== Top区域 - 搜索框 ========== */
+.top-region {
+    background-color: #2d2d2d;
+    border: 2px solid #00ff00; /* 绿色边框 */
+    padding: 10px;
+    transition: border-color 0.2s ease;
+}
+
+.top-region:focus-within {
+    border-color: #ff0000; /* 红色聚焦 */
+}
+
+.search-input {
+    width: 100%;
+    background-color: #1a1a1a;
+    border: 1px solid #00ff00;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: #ff0000;
+}
+
+.search-input::placeholder {
+    color: #888;
+}
+
+/* ========== 路径显示区域 ========== */
+.path-region {
+    background-color: #2d2d2d;
+    border: 2px solid #00ff00;
+    border-top: none;
+    padding: 8px 12px;
+    transition: border-color 0.2s ease;
+}
+
+.path-region:focus {
+    border-color: #ff0000;
+}
+
+.current-path {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+/* ========== 主内容区域 ========== */
+.main-region {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    border-top: 2px solid #00ff00;
+}
+
+/* ========== 左侧栏 - 盘符列表 ========== */
+.left-region {
+    width: 200px;
+    background-color: #2d2d2d;
+    border-right: 2px solid #00ff00;
+    overflow-y: auto;
+    transition: border-color 0.2s ease;
+}
+
+.left-region:focus {
+    border-color: #ff0000;
+    outline: none;
+}
+
+.drive-list {
+    padding: 8px 0;
+}
+
+.drive-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.drive-item:hover {
+    background-color: #3a3a3a;
+}
+
+.drive-item.selected {
+    background-color: #00ff00;
+    color: #000000;
+    border-left-color: #ff0000;
+}
+
+.drive-item.focused {
+    background-color: #ff0000;
+    color: #ffffff;
+}
+
+.drive-icon {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.drive-label {
+    font-weight: 600;
+}
+
+.drive-info {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-left: auto;
+}
+
+/* ========== 右侧栏 - 文件列表 ========== */
+.right-region {
+    flex: 1;
+    background-color: #2d2d2d;
+    overflow-y: auto;
+    transition: border-color 0.2s ease;
+}
+
+.right-region:focus {
+    outline: none;
+}
+
+.file-list {
+    padding: 8px 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.file-item:hover {
+    background-color: #3a3a3a;
+}
+
+.file-item.selected {
+    background-color: #00ff00;
+    color: #000000;
+}
+
+.file-item.focused {
+    background-color: #ff0000;
+    color: #ffffff;
+    border-left-color: #00ff00;
+}
+
+.file-icon {
+    margin-right: 8px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-path {
+    font-size: 11px;
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+/* ========== 滚动条样式 ========== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #00ff00;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #ff0000;
+}
+
+/* ========== 键盘导航提示 ========== */
+.key-hint {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #00ff00;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+    .main-region {
+        flex-direction: column;
+    }
+    
+    .left-region {
+        width: 100%;
+        height: 150px;
+        border-right: none;
+        border-bottom: 2px solid #00ff00;
+    }
+    
+    .right-region {
+        height: calc(100vh - 150px - 120px);
+    }
+}
+
+/* ========== 动画效果 ========== */
+@keyframes focus-pulse {
+    0% { border-color: #00ff00; }
+    50% { border-color: #ff0000; }
+    100% { border-color: #00ff00; }
+}
+
+.region-pulsing {
+    animation: focus-pulse 1s infinite;
+}
+
+/* ========== 选择状态指示器 ========== */
+.selection-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: #ff0000;
+    transition: all 0.2s ease;
+}
+
+/* ========== 加载状态 ========== */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    color: #00ff00;
+    font-size: 14px;
+}
+
+.loading::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    border: 2px solid #00ff00;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
