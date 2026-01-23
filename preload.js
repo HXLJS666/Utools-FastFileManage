@@ -8,7 +8,9 @@ const { ipcRenderer, shell } = require('electron');
 window.fileManagerApi = {
     searchFiles,
     openFile,
-    previewFile
+    previewFile,
+    getDrives,
+    getDirectoryContents
 };
 
 /**
@@ -106,6 +108,129 @@ async function previewFile(filePath) {
         return content;
     } catch (error) {
         console.error('预览文件失败:', error);
+        throw error;
+    }
+}
+
+/**
+ * 获取系统中所有可用的盘符
+ * @returns {Promise<Array>} - 盘符列表
+ */
+async function getDrives() {
+    const platform = process.platform;
+    
+    if (platform === 'win32') {
+        // Windows系统：检查A-Z盘符
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const drives = [];
+        
+        for (const letter of letters) {
+            const drive = `${letter}:\\`;
+            try {
+                // 检查盘符是否存在
+                await fs.access(drive);
+                // 获取盘符信息
+                const stats = await fs.stat(drive);
+                drives.push({
+                    name: drive,
+                    label: letter + ':',
+                    isDrive: true,
+                    type: 'drive',
+                    path: drive
+                });
+            } catch {
+                // 忽略不存在的盘符
+                continue;
+            }
+        }
+        
+        return drives;
+    } else if (platform === 'darwin') {
+        // macOS系统：返回主要挂载点
+        const mountPoints = ['/', '/Users', '/Volumes'];
+        const drives = [];
+        
+        for (const mountPoint of mountPoints) {
+            try {
+                await fs.access(mountPoint);
+                const stats = await fs.stat(mountPoint);
+                drives.push({
+                    name: path.basename(mountPoint) || '/',
+                    label: mountPoint,
+                    isDrive: true,
+                    type: 'drive',
+                    path: mountPoint
+                });
+            } catch {
+                continue;
+            }
+        }
+        
+        return drives;
+    } else {
+        // Linux系统：返回常见挂载点
+        const mountPoints = ['/', '/home', '/mnt', '/media'];
+        const drives = [];
+        
+        for (const mountPoint of mountPoints) {
+            try {
+                await fs.access(mountPoint);
+                const stats = await fs.stat(mountPoint);
+                drives.push({
+                    name: path.basename(mountPoint) || '/',
+                    label: mountPoint,
+                    isDrive: true,
+                    type: 'drive',
+                    path: mountPoint
+                });
+            } catch {
+                continue;
+            }
+        }
+        
+        return drives;
+    }
+}
+
+/**
+ * 获取目录内容
+ * @param {string} dirPath - 目录路径
+ * @returns {Promise<Array>} - 目录内容列表
+ */
+async function getDirectoryContents(dirPath) {
+    try {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        const contents = [];
+        
+        for (const entry of entries) {
+            const fullPath = path.join(dirPath, entry.name);
+            
+            // 跳过隐藏文件和目录
+            if (entry.name.startsWith('.')) {
+                continue;
+            }
+            
+            try {
+                const stats = await fs.stat(fullPath);
+                const item = {
+                    name: entry.name,
+                    path: fullPath,
+                    isDirectory: entry.isDirectory(),
+                    type: entry.isDirectory() ? 'directory' : 'file',
+                    size: stats.size,
+                    mtime: stats.mtimeMs
+                };
+                
+                contents.push(item);
+            } catch {
+                // 忽略无权限访问的文件或目录
+                continue;
+            }
+        }
+        
+        return contents;
+    } catch (error) {
+        console.error('获取目录内容失败:', error);
         throw error;
     }
 }
