@@ -4,13 +4,19 @@ const fsSync = require('fs');
 const path = require('path');
 const { ipcRenderer, shell } = require('electron');
 
+// 引入配置管理模块
+const { getConfig, saveConfig, getDefaultConfig, getConfigPath } = require('./Key-Config.js');
+
 // 将API暴露给渲染进程
 window.fileManagerApi = {
     searchFiles,
     openFile,
     previewFile,
     getDrives,
-    getDirectoryContents
+    getDirectoryContents,
+    getConfig,
+    saveConfig,
+    getDefaultConfig
 };
 
 /**
@@ -234,6 +240,8 @@ async function getDirectoryContents(dirPath) {
         throw error;
     }
 }
+
+
 
 // 监听主进程消息
 ipcRenderer.on('message', (event, message) => {

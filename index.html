@@ -6,30 +6,30 @@
     <title>快速文件管理</title>
     <link rel="stylesheet" href="index.css">
 </head>
-<body>
-    <div class="app-container">
+<body tabindex="-1">
+    <div class="app-container" tabindex="-1">
         <!-- Top区域 - 搜索框 -->
-        <div class="top-region" id="topRegion">
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索文件..." autocomplete="off">
+        <div class="top-region" id="topRegion" tabindex="-1">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索文件..." autocomplete="off" tabindex="1">
         </div>
         
         <!-- 路径显示区域 -->
-        <div class="path-region" id="pathRegion">
+        <div class="path-region" id="pathRegion" tabindex="-1">
             <span class="current-path" id="currentPath">C:/</span>
         </div>
         
         <!-- 主内容区域 -->
-        <div class="main-region">
+        <div class="main-region" tabindex="-1">
             <!-- 左侧栏 - 盘符列表 -->
-            <div class="left-region" id="leftRegion" tabindex="0">
-                <div class="drive-list" id="driveList">
+            <div class="left-region" id="leftRegion" tabindex="2">
+                <div class="drive-list" id="driveList" tabindex="-1">
                     <!-- 盘符列表将通过JavaScript动态生成 -->
                 </div>
             </div>
             
             <!-- 右侧栏 - 文件列表 -->
-            <div class="right-region" id="rightRegion" tabindex="0">
-                <div class="file-list" id="fileList">
+            <div class="right-region" id="rightRegion" tabindex="3">
+                <div class="file-list" id="fileList" tabindex="-1">
                     <!-- 文件列表将通过JavaScript动态生成 -->
                 </div>
             </div>

@@ -33,7 +33,7 @@ body {
 }
 
 .top-region:focus-within {
-    border-color: #ff0000; /* 红色聚焦 */
+    border-color: #8d0015; /* 深红色聚焦 */
 }
 
 .search-input {
@@ -50,7 +50,7 @@ body {
 }
 
 .search-input:focus {
-    border-color: #ff0000;
+    border-color: #8d0015;
 }
 
 .search-input::placeholder {
@@ -67,7 +67,7 @@ body {
 }
 
 .path-region:focus {
-    border-color: #ff0000;
+    border-color: #8d0015;
 }
 
 .current-path {
@@ -94,7 +94,7 @@ body {
 }
 
 .left-region:focus {
-    border-color: #ff0000;
+    border-color: #8d0015;
     outline: none;
 }
 
@@ -118,11 +118,11 @@ body {
 .drive-item.selected {
     background-color: #00ff00;
     color: #000000;
-    border-left-color: #ff0000;
+    border-left-color: #8d0015;
 }
 
 .drive-item.focused {
-    background-color: #ff0000;
+    background-color: #8d0015;
     color: #ffffff;
 }
 
@@ -145,11 +145,14 @@ body {
 .right-region {
     flex: 1;
     background-color: #2d2d2d;
+    border-right: 2px solid #00ff00;
+    border-left: none;
     overflow-y: auto;
     transition: border-color 0.2s ease;
 }
 
 .right-region:focus {
+    border-color: #8d0015;
     outline: none;
 }
 
@@ -176,7 +179,7 @@ body {
 }
 
 .file-item.focused {
-    background-color: #ff0000;
+    background-color: #8d0015;
     color: #ffffff;
     border-left-color: #00ff00;
 }
@@ -217,21 +220,26 @@ body {
 }
 
 /* ========== 滚动条样式 ========== */
+/* 隐藏滚动条但保持内容可滚动 */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 0;
+    height: 0;
 }
 
 ::-webkit-scrollbar-track {
-    background: #1a1a1a;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #00ff00;
-    border-radius: 4px;
+    background: transparent;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #ff0000;
+/* 确保内容可以滚动 */
+.left-region,
+.right-region {
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 }
 
 /* ========== 键盘导航提示 ========== */
