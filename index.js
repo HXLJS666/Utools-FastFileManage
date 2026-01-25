@@ -324,7 +324,71 @@ async function loadDirectoryContents(dirPath) {
 
 // 更新路径显示
 function updatePathDisplay(dirPath) {
-    currentPath.textContent = dirPath;
+    // 清空当前路径内容
+    currentPath.innerHTML = '';
+    
+    // 处理路径分隔符，统一为/进行处理
+    let normalizedPath = dirPath.replace(/\\/g, '/');
+    
+    // 处理Windows根目录（如C:/）
+    let root = '';
+    if (normalizedPath.match(/^[A-Za-z]:/)) {
+        root = normalizedPath.substring(0, 2);
+        normalizedPath = normalizedPath.substring(2);
+    } else if (normalizedPath.startsWith('/')) {
+        // Unix根目录
+        root = '/';
+        normalizedPath = normalizedPath.substring(1);
+    }
+    
+    // 拆分路径为各级目录
+    let pathParts = normalizedPath.split('/').filter(part => part.trim() !== '');
+    
+    // 创建根目录元素
+    const rootElement = document.createElement('span');
+    rootElement.className = 'path-segment';
+    rootElement.textContent = root;
+    rootElement.dataset.path = root === '/' ? root : root + '/';
+    rootElement.addEventListener('click', () => {
+        loadDirectoryContents(rootElement.dataset.path);
+    });
+    currentPath.appendChild(rootElement);
+    
+    // 添加分隔符
+    if (root && pathParts.length > 0) {
+        const separator = document.createElement('span');
+        separator.className = 'path-separator';
+        separator.textContent = '/';
+        currentPath.appendChild(separator);
+    }
+    
+    // 处理各级目录
+    let currentPathStr = root === '/' ? root : root + '/';
+    
+    pathParts.forEach((part, index) => {
+        currentPathStr += part;
+        
+        // 创建目录元素
+        const pathElement = document.createElement('span');
+        pathElement.className = 'path-segment';
+        pathElement.textContent = part;
+        pathElement.dataset.path = currentPathStr;
+        pathElement.addEventListener('click', () => {
+            loadDirectoryContents(pathElement.dataset.path);
+        });
+        currentPath.appendChild(pathElement);
+        
+        // 添加分隔符（除了最后一级）
+        if (index < pathParts.length - 1) {
+            const separator = document.createElement('span');
+            separator.className = 'path-separator';
+            separator.textContent = '/';
+            currentPath.appendChild(separator);
+        }
+        
+        // 添加路径分隔符
+        currentPathStr += '/';
+    });
 }
 
 // 显示目录内容

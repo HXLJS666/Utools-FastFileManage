@@ -74,6 +74,33 @@ body {
     font-family: 'Courier New', monospace;
     font-size: 13px;
     color: #ffffff;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.path-segment {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.path-segment:hover {
+    background-color: rgba(0, 255, 0, 0.2);
+    color: #00ff00;
+    text-decoration: underline;
+}
+
+.path-segment:active {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: #ff0000;
+}
+
+.path-separator {
+    color: #888;
+    margin: 0 2px;
+    user-select: none;
 }
 
 /* ========== 主内容区域 ========== */
