@@ -25,7 +25,8 @@ function getDefaultConfig() {
                 cut: "ctrl+x",
                 delete: "delete",
                 open: "space",
-                openInExplorer: "ctrl+e"
+                openInExplorer: "ctrl+e",
+                newItem: "ctrl+n"
             },
             selection: {
                 multiSelect: "shift",

@@ -12,6 +12,25 @@ const rightRegion = document.getElementById('rightRegion');
 // 路径分隔符，根据当前操作系统自动设置
 const pathSep = /^win/.test(navigator.platform) ? '\\' : '/';
 
+// 浏览器环境下的路径处理函数
+const path = {
+    join: function(...args) {
+        // 移除所有空字符串和undefined
+        const validArgs = args.filter(arg => arg && typeof arg === 'string');
+        if (validArgs.length === 0) return '';
+        
+        // 使用当前平台的路径分隔符连接所有路径段
+        const joined = validArgs.join(pathSep);
+        
+        // 处理Windows路径（确保使用正确的分隔符）
+        if (pathSep === '\\') {
+            return joined.replace(/\//g, pathSep);
+        }
+        
+        return joined;
+    }
+};
+
 // 当前状态
 let currentDir = null;
 let selectedFiles = [];
@@ -19,6 +38,13 @@ let focusedIndex = 0;
 let config = null;
 let keyMapping = null;
 let currentFocusedRegion = 'search'; // search, drive, file
+
+// 剪贴板状态管理
+let clipboardState = {
+    mode: null, // 'copy' 或 'cut' 或 null（空剪贴板）
+    items: [],  // 存储复制/剪切的文件对象列表
+    sourceDir: null // 记录源目录路径，用于剪切操作
+};
 
 // 初始化应用
 async function initApp() {
@@ -231,7 +257,8 @@ function buildKeyMapping() {
             cut: config.keyboard.fileOperations.cut.toLowerCase(),
             delete: config.keyboard.fileOperations.delete.toLowerCase(),
             open: config.keyboard.fileOperations.open.toLowerCase(),
-            openInExplorer: config.keyboard.fileOperations.openInExplorer.toLowerCase()
+            openInExplorer: config.keyboard.fileOperations.openInExplorer.toLowerCase(),
+            newItem: config.keyboard.fileOperations.newItem.toLowerCase()
         },
         selection: {
             multiSelect: config.keyboard.selection.multiSelect.toLowerCase(),
@@ -438,40 +465,92 @@ function addFileActionListeners() {
     fileItems.forEach((item, index) => {
         // 点击事件 - 处理选择和打开
         item.addEventListener('click', (e) => {
-            // 移除其他项的聚焦状态
-            fileItems.forEach(i => i.classList.remove('focused', 'selected'));
+            // 阻止事件冒泡
+            e.stopPropagation();
             
-            // 设置当前项为聚焦和选中状态
-            item.classList.add('focused', 'selected');
+            // 如果按住Ctrl键，切换选中状态
+            if (e.ctrlKey || e.metaKey) {
+                // 切换当前项的选中状态
+                item.classList.toggle('selected');
+                // 设置当前项为聚焦状态
+                fileItems.forEach(i => i.classList.remove('focused'));
+                item.classList.add('focused');
+            }
+            // 如果按住Shift键，选择连续范围
+            else if (e.shiftKey) {
+                // 获取当前聚焦项的索引
+                const currentFocusedIndex = Array.from(fileItems).findIndex(i => i.classList.contains('focused'));
+                
+                // 如果没有聚焦项，设置当前项为聚焦项
+                if (currentFocusedIndex === -1) {
+                    item.classList.add('focused', 'selected');
+                } else {
+                    // 确定选择范围的起始和结束索引
+                    const start = Math.min(currentFocusedIndex, index);
+                    const end = Math.max(currentFocusedIndex, index);
+                    
+                    // 移除所有选中状态
+                    fileItems.forEach(i => i.classList.remove('selected'));
+                    
+                    // 选择范围内的所有项
+                    for (let i = start; i <= end; i++) {
+                        fileItems[i].classList.add('selected');
+                    }
+                    
+                    // 设置当前项为聚焦状态
+                    fileItems.forEach(i => i.classList.remove('focused'));
+                    item.classList.add('focused');
+                }
+            }
+            // 否则，只选择当前项
+            else {
+                // 移除其他项的聚焦和选中状态
+                fileItems.forEach(i => i.classList.remove('focused', 'selected'));
+                
+                // 设置当前项为聚焦和选中状态
+                item.classList.add('focused', 'selected');
+                
+                // 处理点击行为
+                const filePath = item.dataset.path;
+                const fileType = item.dataset.type;
+                
+                if (fileType === 'directory') {
+                    // 进入目录
+                    loadDirectoryContents(filePath);
+                } else {
+                    // 打开文件
+                    openFile(filePath);
+                }
+            }
             
             // 更新当前聚焦索引
             focusedIndex = index;
             
-            // 处理点击行为
-            const filePath = item.dataset.path;
-            const fileType = item.dataset.type;
-            
-            if (fileType === 'directory') {
-                // 进入目录
-                loadDirectoryContents(filePath);
-            } else {
-                // 打开文件
-                openFile(filePath);
-            }
+            // 更新选中文件列表
+            updateSelectedFiles();
         });
         
         // 鼠标悬停事件
         item.addEventListener('mouseenter', () => {
-            // 移除其他项的聚焦状态
-            fileItems.forEach(i => i.classList.remove('focused'));
-            
-            // 设置当前项为聚焦状态
-            item.classList.add('focused');
-            
-            // 更新当前聚焦索引
-            focusedIndex = index;
+            // 只有在没有按住Ctrl或Shift键时，才更新聚焦状态
+            if (!event.ctrlKey && !event.shiftKey) {
+                // 移除其他项的聚焦状态
+                fileItems.forEach(i => i.classList.remove('focused'));
+                
+                // 设置当前项为聚焦状态
+                item.classList.add('focused');
+                
+                // 更新当前聚焦索引
+                focusedIndex = index;
+            }
         });
     });
+}
+
+// 更新选中文件列表
+function updateSelectedFiles() {
+    selectedFiles = Array.from(document.querySelectorAll('.file-item.selected'))
+        .map(item => item.dataset.path);
 }
 
 // 打开文件
@@ -556,8 +635,50 @@ function handleTabKey(event) {
 
 // 处理键盘按键事件
 function handleKeyDown(event) {
+    // 检查新建文件弹窗是否显示
+    const modal = document.getElementById('newItemModal');
+    const isModalVisible = modal && modal.classList.contains('show');
+    
+    // 如果弹窗显示，且焦点在输入框中，允许正常输入
+    if (isModalVisible && event.target === document.getElementById('newItemName')) {
+        // 允许正常的字符输入和Enter/Escape键
+        // 只屏蔽可能冲突的快捷键，不屏蔽正常输入
+        return;
+    }
+    
+    // 如果弹窗显示，但焦点不在输入框中，只允许Enter和Escape键
+    if (isModalVisible) {
+        // 允许Enter和Escape键操作
+        if (event.key === 'Enter' || event.key === 'Escape') {
+            // 这些键在弹窗内部已经处理，这里不做任何操作
+            return;
+        }
+        // 屏蔽其他所有快捷键
+        event.preventDefault();
+        return;
+    }
+    
     // 忽略在输入框中按下的键
     if (event.target === searchInput) {
+        return;
+    }
+    
+    // 检查文件操作按键 - 复制、剪切、粘贴、新建（无论当前聚焦区域）
+    if (isKeyPressed(event, keyMapping.fileOperations.copy)) {
+        event.preventDefault();
+        handleCopy();
+        return;
+    } else if (isKeyPressed(event, keyMapping.fileOperations.cut)) {
+        event.preventDefault();
+        handleCut();
+        return;
+    } else if (isKeyPressed(event, keyMapping.fileOperations.paste)) {
+        event.preventDefault();
+        handlePaste();
+        return;
+    } else if (isKeyPressed(event, keyMapping.fileOperations.newItem)) {
+        event.preventDefault();
+        handleNewItem();
         return;
     }
     
@@ -631,9 +752,6 @@ function handleKeyDown(event) {
         }
     }
     
-    // 检查文件操作按键（预留，后续实现）
-    // ...
-    
     // 检查选择操作按键（预留，后续实现）
     // ...
     
@@ -658,7 +776,7 @@ function moveSelection(newIndex, fileItems) {
     
     // 设置新的聚焦项
     fileItems[newIndex].classList.add('focused');
-    fileItems[newIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    fileItems[newIndex].scrollIntoView({ behavior: 'auto', block: 'nearest' });
     
     // 更新当前聚焦索引
     focusedIndex = newIndex;
@@ -681,7 +799,7 @@ function moveDriveSelection(newIndex, driveItems) {
     
     // 设置新的聚焦项
     driveItems[newIndex].classList.add('focused');
-    driveItems[newIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    driveItems[newIndex].scrollIntoView({ behavior: 'auto', block: 'nearest' });
 }
 
 // 确认选择
@@ -771,4 +889,224 @@ function switchToFileList() {
             fileItems[0].classList.add('focused');
         }
     }
+}
+
+// 复制文件到剪贴板
+function handleCopy() {
+    // 获取当前选中的文件
+    const selectedItems = document.querySelectorAll('.file-item.selected, .file-item.focused');
+    if (selectedItems.length === 0) {
+        showMessage('请先选择要复制的文件', 'warning');
+        return;
+    }
+    
+    // 构建剪贴板数据
+    clipboardState = {
+        mode: 'copy',
+        items: Array.from(selectedItems).map(item => ({
+            path: item.dataset.path,
+            name: item.querySelector('.file-name').textContent,
+            isDirectory: item.dataset.type === 'directory'
+        })),
+        sourceDir: currentDir
+    };
+    
+    // 显示复制状态
+    showMessage(`已复制 ${clipboardState.items.length} 个项目到剪贴板`, 'success');
+}
+
+// 剪切文件到剪贴板
+function handleCut() {
+    // 获取当前选中的文件
+    const selectedItems = document.querySelectorAll('.file-item.selected, .file-item.focused');
+    if (selectedItems.length === 0) {
+        showMessage('请先选择要剪切的文件', 'warning');
+        return;
+    }
+    
+    // 构建剪贴板数据
+    clipboardState = {
+        mode: 'cut',
+        items: Array.from(selectedItems).map(item => ({
+            path: item.dataset.path,
+            name: item.querySelector('.file-name').textContent,
+            isDirectory: item.dataset.type === 'directory'
+        })),
+        sourceDir: currentDir
+    };
+    
+    // 显示剪切状态
+    showMessage(`已剪切 ${clipboardState.items.length} 个项目到剪贴板`, 'success');
+}
+
+// 粘贴剪贴板内容
+async function handlePaste() {
+    if (!clipboardState.mode || clipboardState.items.length === 0) {
+        showMessage('剪贴板为空', 'warning');
+        return;
+    }
+    
+    if (!currentDir) {
+        showMessage('请先选择目标目录', 'warning');
+        return;
+    }
+    
+    try {
+        // 获取源文件路径列表
+        const sourcePaths = clipboardState.items.map(item => item.path);
+        
+        let result;
+        if (clipboardState.mode === 'copy') {
+            // 执行复制操作
+            result = await window.fileManagerApi.copyFiles(sourcePaths, currentDir);
+        } else if (clipboardState.mode === 'cut') {
+            // 执行剪切操作
+            result = await window.fileManagerApi.moveFiles(sourcePaths, currentDir);
+            // 清空剪贴板
+            clipboardState = { mode: null, items: [], sourceDir: null };
+        }
+        
+        // 显示操作结果
+        showMessage(result.message, 'success');
+        
+        // 重新加载当前目录内容，显示粘贴结果
+        await loadDirectoryContents(currentDir);
+    } catch (error) {
+        showMessage(`粘贴失败: ${error.message}`, 'error');
+    }
+}
+
+// Windows命名规则检测函数
+function isValidWindowsFileName(fileName) {
+    // 1. 检查文件名是否为空
+    if (!fileName || fileName.trim() === '') {
+        return false;
+    }
+    
+    // 2. 检查文件名长度
+    if (fileName.length > 255) {
+        return false;
+    }
+    
+    // 3. 检查是否包含非法字符
+    const illegalChars = /[<>:/"|?*\\]/;
+    if (illegalChars.test(fileName)) {
+        return false;
+    }
+    
+    // 4. 检查文件名是否以空格或点结尾
+    if (fileName.endsWith(' ') || fileName.endsWith('.')) {
+        return false;
+    }
+    
+    // 5. 检查是否是保留文件名
+    const reservedNames = [
+        'CON', 'PRN', 'AUX', 'NUL',
+        'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+        'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+    ];
+    
+    // 获取文件名（不包括扩展名）
+    const baseName = fileName.split('.')[0].toUpperCase();
+    if (reservedNames.includes(baseName)) {
+        return false;
+    }
+    
+    return true;
+}
+
+// 处理新建文件/文件夹
+function handleNewItem() {
+    if (!currentDir) {
+        showMessage('请先选择目标目录', 'warning');
+        return;
+    }
+    
+    // 显示新建文件/文件夹弹窗
+    showNewItemModal();
+}
+
+// 显示新建文件/文件夹弹窗
+function showNewItemModal() {
+    // 获取弹窗元素
+    const modal = document.getElementById('newItemModal');
+    const input = document.getElementById('newItemName');
+    const closeBtn = document.getElementById('modalClose');
+    
+    // 重置输入框
+    input.value = '';
+    
+    // 显示弹窗
+    modal.classList.add('show');
+    
+    // 聚焦到输入框
+    input.focus();
+    
+    // 确认创建函数
+    const handleConfirm = async () => {
+        const itemName = input.value.trim();
+        
+        // 验证文件名
+        if (!isValidWindowsFileName(itemName)) {
+            showMessage('无效的文件名，请检查是否包含非法字符或保留名称', 'error');
+            return;
+        }
+        
+        try {
+            // 检查是否包含扩展名
+            const hasExtension = itemName.includes('.');
+            
+            // 构建完整路径
+            const fullPath = path.join(currentDir, itemName);
+            
+            let result;
+            if (hasExtension) {
+                // 创建文件
+                result = await window.fileManagerApi.createFile(fullPath);
+            } else {
+                // 创建文件夹
+                result = await window.fileManagerApi.createDirectory(fullPath);
+            }
+            
+            // 显示操作结果
+            showMessage(result.message, 'success');
+            
+            // 关闭弹窗
+            modal.classList.remove('show');
+            
+            // 重新加载当前目录内容
+            await loadDirectoryContents(currentDir);
+        } catch (error) {
+            showMessage(`创建失败: ${error.message}`, 'error');
+        }
+    };
+    
+    // 取消创建函数
+    const handleCancel = () => {
+        modal.classList.remove('show');
+    };
+    
+    // 关闭按钮点击事件
+    closeBtn.addEventListener('click', handleCancel);
+    
+    // 按下Enter键确认
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleConfirm();
+        }
+    });
+    
+    // 按下Escape键取消
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            handleCancel();
+        }
+    });
+    
+    // 点击模态框外部关闭
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            handleCancel();
+        }
+    });
 }

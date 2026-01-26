@@ -36,6 +36,25 @@
         </div>
     </div>
     
+    <!-- 新建文件/文件夹弹窗 -->
+    <div id="newItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="newItemName">名称：</label>
+                <input type="text" id="newItemName" class="modal-input" placeholder="输入文件名或文件夹名">
+                <div class="modal-hint">提示：输入包含扩展名的名称将创建文件，否则创建文件夹</div>
+                <div class="modal-keys-hint">
+                    <span class="key-hint-item">Enter: 创建</span>
+                    <span class="key-hint-item">Escape: 取消</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="UI-Config.js"></script>
     <script src="index.js"></script>
 </body>
