@@ -1096,9 +1096,10 @@ function showNewItemModal() {
         }
     });
     
-    // 按下Escape键取消
+    // 按下Backspace键取消
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        // 只有在输入框为空时，Backspace才用于取消
+        if (e.key === 'Backspace' && input.value === '') {
             handleCancel();
         }
     });

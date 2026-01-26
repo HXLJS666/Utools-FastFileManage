@@ -468,10 +468,11 @@ body {
 }
 
 .key-hint-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 2px 6px;
-    border-radius: 3px;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
     font-family: 'Courier New', monospace;
+    color: #00ff00;
 }
 
 .modal-footer {
